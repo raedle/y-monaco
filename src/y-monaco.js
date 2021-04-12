@@ -66,6 +66,23 @@ export class MonacoBinding {
     this.monacoModel = monacoModel
     this.editors = editors
     this.mux = createMutex()
+    this.undoManager = new Y.UndoManager(ytext, {
+      trackedOrigins: new Set([this])
+    })
+    // intercept undo keyboard shortcut and undo last stack item
+    const undoCmd = monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_Z
+    editors.forEach(editor => {
+      editor.addCommand(undoCmd, () => {
+        this.undoManager.undo()
+      })
+    })
+    // intercept redo keyboard shortcut and redo last undone stack item
+    const redoCmd = monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_Z
+    editors.forEach(editor => {
+      editor.addCommand(redoCmd, () => {
+        this.undoManager.redo()
+      })
+    })
     /**
      * @type {Map<monaco.editor.IStandaloneCodeEditor, RelativeSelection>}
      */
